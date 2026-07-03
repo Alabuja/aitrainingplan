@@ -306,7 +306,14 @@
 
         <label>
           Role
-          <input id="role" value="Operations manager" autocomplete="organization-title">
+          <select id="role">
+            <option selected>Operations manager</option>
+            <option>Marketing manager</option>
+            <option>Data analyst</option>
+            <option>Software developer</option>
+            <option>HR manager</option>
+            <option>Sales manager</option>
+          </select>
         </label>
 
         <label>
@@ -385,6 +392,51 @@
       "Software delivery": ["Pick a coding assistant workflow", "Add AI-assisted test planning", "Document review prompts", "Measure cycle-time impact"]
     };
 
+    const rolePlaybooks = {
+      "Operations manager": {
+        "Productivity": ["Audit recurring admin tasks", "Create SOP prompt templates", "Automate status summaries", "Measure time saved by process"],
+        "Business workflow": ["Map a cross-team handoff", "Draft AI-assisted SOPs", "Automate weekly operations reporting", "Review exceptions with stakeholders"],
+        "Marketing": ["Coordinate campaign production tasks", "Create asset request briefs", "Build approval checklists", "Track operational bottlenecks"],
+        "Data analysis": ["Clean workflow data", "Spot process delays", "Build recurring KPI prompts", "Turn findings into action owners"],
+        "Software delivery": ["Clarify intake requirements", "Create release-readiness checklists", "Summarize sprint risks", "Measure delivery blockers"]
+      },
+      "Marketing manager": {
+        "Productivity": ["Organize content requests", "Create reusable campaign prompts", "Draft briefing templates", "Measure approval speed"],
+        "Business workflow": ["Map campaign intake", "Draft brand-safe AI guidelines", "Automate campaign recap notes", "Review outputs with sales"],
+        "Marketing": ["Define audience segments", "Generate campaign variants", "Build a review and approval loop", "Track conversion signals"],
+        "Data analysis": ["Clean campaign performance data", "Identify channel patterns", "Create insight prompts", "Turn findings into next tests"],
+        "Software delivery": ["Write clearer growth experiment briefs", "Review landing-page copy with AI", "Document acceptance criteria", "Track launch friction"]
+      },
+      "Data analyst": {
+        "Productivity": ["Standardize data request intake", "Create analysis prompt templates", "Automate first-pass summaries", "Measure report turnaround"],
+        "Business workflow": ["Map stakeholder questions", "Draft repeatable analysis workflows", "Automate recurring insight briefs", "Review decisions made from data"],
+        "Marketing": ["Segment campaign data", "Generate audience hypotheses", "Build reporting narratives", "Track test results"],
+        "Data analysis": ["Clean one dataset", "Ask sharper business questions", "Create repeatable analysis prompts", "Turn findings into decisions"],
+        "Software delivery": ["Translate metrics into backlog context", "Review event tracking plans", "Document dashboard QA prompts", "Measure data quality issues"]
+      },
+      "Software developer": {
+        "Productivity": ["Audit coding interruptions", "Create reusable dev prompts", "Automate code review summaries", "Measure cycle-time gains"],
+        "Business workflow": ["Map a delivery bottleneck", "Draft technical decision notes", "Automate sprint update artifacts", "Review quality with product"],
+        "Marketing": ["Support experiment implementation briefs", "Generate technical copy drafts", "Create launch QA checklists", "Track site performance signals"],
+        "Data analysis": ["Inspect application logs", "Ask debugging questions", "Create analysis snippets", "Turn findings into fixes"],
+        "Software delivery": ["Pick a coding assistant workflow", "Add AI-assisted test planning", "Document review prompts", "Measure cycle-time impact"]
+      },
+      "HR manager": {
+        "Productivity": ["Audit recurring people-ops tasks", "Create policy response templates", "Draft onboarding checklists", "Measure request turnaround"],
+        "Business workflow": ["Map employee lifecycle handoffs", "Draft AI usage guardrails", "Automate weekly HR summaries", "Review sensitive outputs carefully"],
+        "Marketing": ["Draft employer-brand messages", "Generate candidate nurture ideas", "Build review checklists", "Track response quality"],
+        "Data analysis": ["Clean engagement survey data", "Identify workforce trends", "Create people analytics prompts", "Turn findings into manager actions"],
+        "Software delivery": ["Clarify HR systems requirements", "Review support ticket patterns", "Document rollout prompts", "Measure adoption friction"]
+      },
+      "Sales manager": {
+        "Productivity": ["Audit rep admin work", "Create call prep prompts", "Draft follow-up templates", "Measure selling time gained"],
+        "Business workflow": ["Map lead handoffs", "Draft AI-assisted pipeline routines", "Automate forecast notes", "Review deal risks with reps"],
+        "Marketing": ["Convert campaign briefs into talk tracks", "Generate objection-handling variants", "Build message review loops", "Track lead quality signals"],
+        "Data analysis": ["Clean pipeline data", "Spot stage conversion patterns", "Create forecast prompts", "Turn findings into coaching priorities"],
+        "Software delivery": ["Write CRM improvement requests", "Review sales-tool workflows", "Document acceptance criteria", "Measure tool adoption blockers"]
+      }
+    };
+
     const levelTasks = {
       "Beginner": ["learn the core vocabulary", "practice with guided examples", "keep every output human-reviewed"],
       "Intermediate": ["standardize the best prompts", "connect AI output to real work", "compare results against a baseline"],
@@ -395,16 +447,20 @@
       return value.trim().replace(/\s+/g, " ") || fallback;
     }
 
+    function articleFor(value) {
+      return /^(operations|hr)\b/i.test(value) ? "an" : "a";
+    }
+
     function buildPlan() {
       const currentRole = clean(role.value, "knowledge worker");
       const currentGoal = clean(goal.value, "build practical AI confidence");
       const currentLevel = level.value;
       const weeklyHours = Math.max(1, Math.min(20, Number(hours.value) || 4));
       const currentFocus = focus.value;
-      const tasks = playbooks[currentFocus];
+      const tasks = rolePlaybooks[currentRole]?.[currentFocus] || playbooks[currentFocus];
       const calibrations = levelTasks[currentLevel];
 
-      planTitle.textContent = `AI adoption plan for a ${currentRole}`;
+      planTitle.textContent = `AI adoption plan for ${articleFor(currentRole)} ${currentRole}`;
       planMeta.textContent = `${currentLevel} · ${currentFocus} · ${weeklyHours} hours/week`;
       planLabel.textContent = `${weeklyHours * 4}-hour practical sprint`;
 
@@ -448,6 +504,8 @@
       focus.value = "Business workflow";
       buildPlan();
     });
+    [role, level, hours, focus].forEach((control) => control.addEventListener("change", buildPlan));
+    goal.addEventListener("input", buildPlan);
     document.querySelector("#copyPlan").addEventListener("click", async () => {
       await navigator.clipboard.writeText(planAsText());
       document.querySelector("#copyPlan").textContent = "Copied";
